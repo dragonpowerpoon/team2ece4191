@@ -7,19 +7,35 @@ import os
 
 
 def printEncoder():
-	encoderinput1 = gpiozero.InputDevice(pin=19)
-	prevEncoderVal = 0
-	prevTime = 0
+	lEncoder = gpiozero.RotaryEncoder(a=19, b=16,max_steps=100000)
+	rEncoder = gpiozero.RotaryEncoder(a=23, b=24,max_steps=100000)
+	lprevious = 0
+	rprevious = 0
 	while True:
-		currEncoderVal = encoderinput1.value 
-		print(currEncoderVal)
-        if prevEncoderVal == 0 && encoderinput1 == 1:
-        	currTime = time.perf_counter()
-        	freq = 1/(prevTime - currTime)
-        	prevTime = currTime
-        prevEncoderVal = currEncoderVal
 
-		time.sleep (0.0002)
+		lSteps = lEncoder.steps
+		rSteps = rEncoder.steps
+		lSpeed = lSteps - lprevious
+		rSpeed = rSteps - rprevious
+		print("Left", lSpeed, "Right", rSpeed)
+		lprevious = lSteps
+		rprevious = rSteps
+		time.sleep(0.1)
+
+	#encoderinput1 = gpiozero.InputDevice(pin=19)
+	#encoderinput2 = gpiozero.InputDevice(pin=16)
+	#prevEncoderVal = 0
+	#prevTime = 0
+	#while True:
+	#	currEncoderVal = encoderinput1.value
+	#	if prevEncoderVal == 0 and encoderinput1.is_active:
+	#		currTime = time.perf_counter()
+	#		freq = 1/(currTime - prevTime)
+	#		prevTime = currTime
+	#		print(freq)
+	#	prevEncoderVal = currEncoderVal
+	#
+	#	time.sleep (0.0002)
 
 def motorController():
 	pwm  = gpiozero.PWMOutputDevice(pin=12,active_high=True,initial_value=0,frequency=100)
@@ -35,9 +51,9 @@ def motorController():
 	
 	while run == True:
 		#directionFlag = input("set motor direction (b/f): ")
-		directionFlag = "f"
+		directionFlag = "b"
 		if directionFlag == "b":
-			forwardDir.off()
+			#forwardDir.off()
 			backwardDir.on()
 		elif directionFlag == "f":
 			forwardDir.on()
@@ -47,7 +63,7 @@ def motorController():
 			print('direction input invalid')
 
 		#speedFlag = float(input("set speed (0-100): "))
-		speedFlag = 80
+		speedFlag =  40
 		if speedFlag <= 100:
 			pwm.value = speedFlag/100
 		else:

@@ -5,7 +5,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 
 async def motorcontrol():
-    pwm = gpiozero.PWMOutputDevice(pin=12,active_high=True,initial_value=0,frequency=100)
+    pwm  =gpiozero.PWMOutputDevice(pin=12,active_high=True,initial_value=0,frequency=100)
     in1F = gpiozero.OutputDevice(pin=5)
     in2B = gpiozero.OutputDevice(pin=6)
     standby = gpiozero.OutputDevice(pin=26)
