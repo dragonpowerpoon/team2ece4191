@@ -2,8 +2,18 @@
 
 import gpiozero
 import time
-from multiprocessing import Process
+from multiprocessing import Process, Value, Array
 import os
+
+def getUltrasonics():
+	sensor1 = gpiozero.DistanceSensor(echo=20,trigger=21)
+	sensor2 = gpiozero.DistanceSensor(echo=17,trigger=27)
+
+
+	while True:
+	    print('S1 Distance: ', sensor1.distance * 100)
+	    print('S2 Distance: ', sensor2.distance * 100)
+	    time.sleep(0.1)
 
 
 def printEncoder():
@@ -17,9 +27,12 @@ def printEncoder():
 		rSteps = rEncoder.steps
 		lSpeed = lSteps - lprevious
 		rSpeed = rSteps - rprevious
-		print("Left", lSpeed, "Right", rSpeed)
+		#print("Left", lSpeed, "Right", rSpeed)
 		lprevious = lSteps
 		rprevious = rSteps
+		if(pwm1value.value < 0.8):
+			pwm1value.value = pwm1value.value + 0.01
+			pwm2value.value = pwm2value.value + 0.01
 		time.sleep(0.1)
 
 	#encoderinput1 = gpiozero.InputDevice(pin=19)
@@ -38,44 +51,56 @@ def printEncoder():
 	#	time.sleep (0.0002)
 
 def motorController():
-	pwm  = gpiozero.PWMOutputDevice(pin=12,active_high=True,initial_value=0,frequency=100)
-	forwardDir = gpiozero.OutputDevice(pin=5)
-	backwardDir = gpiozero.OutputDevice(pin=6)
+	pwm1  = gpiozero.PWMOutputDevice(pin=12,active_high=True,initial_value=0,frequency=100)
+	pwm2  = gpiozero.PWMOutputDevice(pin=13,active_high=True,initial_value=0,frequency=100)
+	dir1 = gpiozero.OutputDevice(pin=5)
+	dir2 = gpiozero.OutputDevice(pin=6)
 	standby = gpiozero.OutputDevice(pin=26)
 
 	standby.on()
 	run = True
-	forwardDir.off()
-	backwardDir.on()
-	pwm.value = 0
-	
+	dir1.off()
+	dir2.off()
+
+
 	while run == True:
-		#directionFlag = input("set motor direction (b/f): ")
-		directionFlag = "b"
-		if directionFlag == "b":
-			#forwardDir.off()
-			backwardDir.on()
-		elif directionFlag == "f":
-			forwardDir.on()
-			backwardDir.off()
-		else:
-			run = False
-			print('direction input invalid')
+		pwm1.value = pwm1value.value
+		pwm2.value = pwm2value.value
+		time.sleep(0.05)
+	#	#directionFlag = input("set motor direction (b/f): ")
+	#	directionFlag = "b"
+	#	if directionFlag == "b":
+	#		#forwardDir.off()
+	#		backwardDir.on()
+	#	elif directionFlag == "f":
+	#		forwardDir.on()
+	#		backwardDir.off()
+	#	else:
+	#		run = False
+	#		print('direction input invalid')
 
 		#speedFlag = float(input("set speed (0-100): "))
-		speedFlag =  40
-		if speedFlag <= 100:
-			pwm.value = speedFlag/100
-		else:
-			run = False
-			print('Error: PWM value invalid')
+		#speedFlag =  40
+		#if speedFlag <= 100:
+		#	pwm.value = speedFlag/100
+		#else:
+		#	run = False
+		#	print('Error: PWM value invalid')
 
 		#print('direction: ', directionFlag, 'Speed:', pwm.value, '\n')
-		time.sleep (0.01)
+		#time.sleep (0.01)
 
 if __name__ == '__main__':
+	sensor1distance = Value('d', 100)
+	sensor2distance = Value('d', 100)
+	pwm1value = Value('d', 0.3)
+	pwm2value = Value('d', 0.3)
+
 	p = Process(target=motorController)
 	p.start()
 	k = Process(target = printEncoder)
 	k.start()
+	n = Process(target = getUltrasonics)
+	n.start()
 	p.join()
+
